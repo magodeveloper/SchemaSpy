@@ -55,6 +55,8 @@ COMMENT ON COLUMN posts.author_id IS 'The user who authored the post';
 COMMENT ON COLUMN posts.title IS 'Post title';
 COMMENT ON COLUMN posts.body IS 'Post body text';
 COMMENT ON COLUMN posts.published IS 'Whether the post is publicly visible';
+COMMENT ON COLUMN posts.created_at IS 'Timestamp when the post was created';
+COMMENT ON COLUMN posts.updated_at IS 'Timestamp when the post was last updated';
 
 CREATE TABLE IF NOT EXISTS comments (
     id          SERIAL PRIMARY KEY,
@@ -69,6 +71,7 @@ COMMENT ON COLUMN comments.id IS 'Unique identifier for the comment';
 COMMENT ON COLUMN comments.post_id IS 'The post this comment belongs to';
 COMMENT ON COLUMN comments.author_id IS 'The user who wrote the comment';
 COMMENT ON COLUMN comments.body IS 'The comment text';
+COMMENT ON COLUMN comments.created_at IS 'Timestamp when the comment was created';
 
 -- Seed some default roles
 INSERT INTO roles (name, description) VALUES

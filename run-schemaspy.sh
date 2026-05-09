@@ -56,7 +56,6 @@ require_command() {
 require_command docker
 
 if [[ "$NO_DB" == false ]]; then
-  require_command docker
   # Prefer docker compose (v2 plugin) over legacy docker-compose
   if docker compose version >/dev/null 2>&1; then
     COMPOSE_CMD="docker compose"
