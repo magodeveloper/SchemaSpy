@@ -1,0 +1,15 @@
+# SchemaSpy generated documentation (output of run-schemaspy.sh or CI)
+output/
+
+# Docker volumes / local state
+*.env.local
+
+# macOS
+.DS_Store
+
+# Editor files
+.idea/
+*.iml
+.vscode/
+*.swp
+*~

@@ -1,0 +1,83 @@
+name: SchemaSpy Documentation
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - "init/**"
+      - "schemaspy.properties"
+      - ".github/workflows/schemaspy.yml"
+  pull_request:
+    paths:
+      - "init/**"
+      - "schemaspy.properties"
+      - ".github/workflows/schemaspy.yml"
+  workflow_dispatch:
+
+jobs:
+  generate-docs:
+    name: Generate database documentation
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: schemaspy
+          POSTGRES_USER: schemaspy
+          POSTGRES_PASSWORD: schemaspy
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U schemaspy"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Apply database schema
+        env:
+          PGPASSWORD: schemaspy
+        run: |
+          for f in init/*.sql; do
+            echo "Applying $f …"
+            psql -h localhost -U schemaspy -d schemaspy -f "$f"
+          done
+
+      - name: Create output directory
+        run: mkdir -p output
+
+      - name: Run SchemaSpy
+        run: |
+          docker run --rm \
+            --network host \
+            -v "$GITHUB_WORKSPACE/output:/output" \
+            -v "$GITHUB_WORKSPACE/schemaspy.properties:/schemaspy.properties" \
+            schemaspy/schemaspy:latest \
+            -configFile /schemaspy.properties \
+            -host localhost \
+            -port 5432 \
+            -db  schemaspy \
+            -u   schemaspy \
+            -p   schemaspy \
+            -o   /output
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: schemaspy-docs
+          path: output/
+          retention-days: 30
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output
+          publish_branch: gh-pages

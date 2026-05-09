@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: schemaspy-db
+    environment:
+      POSTGRES_DB: ${SCHEMASPY_DB:-schemaspy}
+      POSTGRES_USER: ${SCHEMASPY_USER:-schemaspy}
+      POSTGRES_PASSWORD: ${SCHEMASPY_PASSWORD:-schemaspy}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SCHEMASPY_USER:-schemaspy}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  schemaspy:
+    image: schemaspy/schemaspy:latest
+    container_name: schemaspy
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./schemaspy.properties:/schemaspy.properties
+      - ./output:/output
+    command: >
+      -configFile /schemaspy.properties
+      -host db
+      -port 5432
+      -db ${SCHEMASPY_DB:-schemaspy}
+      -u ${SCHEMASPY_USER:-schemaspy}
+      -p ${SCHEMASPY_PASSWORD:-schemaspy}
+      -o /output
+
+volumes:
+  db-data:
